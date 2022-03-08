@@ -1,0 +1,131 @@
+
+struct KeyDownRequest {
+  unicode int;
+  leftShiftDown bool;
+  rightShiftDown bool;
+  leftAltDown bool;
+  rightAltDown bool;
+  ctrlDown bool;
+}
+
+func HandleKeyDownRequest(
+  server &!EditorInstance,
+  request &KeyDownRequest)
+Result<(), str> {
+  domino = &!server.domino;
+
+  c = request.unicode;
+  leftShiftDown = request.leftShiftDown;
+  rightShiftDown = request.rightShiftDown;
+  ctrlDown = request.ctrlDown;
+  leftAltDown = request.leftAltDown;
+  rightAltDown = request.rightAltDown;
+  
+  println("Got key down: " + c);
+
+  if c == 27 {
+    println("Got escape!");
+  } else if c == 61 { // = and + and -2
+    foreach loc in server.selectedLocations {
+      presenter = (server.terrainController.tilePresenters.get(loc)).get();
+      oldElevation = server.terrainController.terrain.tiles.get(loc).get().elevation;
+      presenter!.SetElevation(oldElevation + 1);
+    }
+    //Save();
+    //UpdateLookPanelView();
+  } else if c == 45 { // - and _ and -1
+    foreach loc in server.selectedLocations {
+      presenter = (server.terrainController.tilePresenters.get(loc)).get();
+      oldElevation = server.terrainController.terrain.tiles.get(loc).get().elevation;
+      newElevation = max(1, oldElevation - 1);
+      presenter!.SetElevation(newElevation);
+    }
+    //Save();
+    //UpdateLookPanelView();
+  }
+  keyCodeToMemberMap = makeKeyCodeToMemberMap();
+  foreach [keyCode, member] in keyCodeToMemberMap {
+    if c == keyCode.toAscii() {
+      addKeyDown = rightAltDown;
+      removeKeyDown = leftAltDown;
+      server!.ChangeMember(member, addKeyDown, removeKeyDown);
+      //Save();
+    }
+    //UpdateLookPanelView();
+  }
+
+  ret Ok<(), str>(());
+
+  //switch (c) {
+  //  case 27:
+  //    SetSelection(new SortedSet<Location>());
+  //    break;
+  //  case '/':
+  //    var allLocations = new SortedSet<Location>();
+  //    foreach (var locationAndTile in terrainPresenter.terrain.tiles) {
+  //      allLocations.Add(locationAndTile.Key);
+  //    }
+  //    SetSelection(allLocations);
+  //    break;
+  //  case 'z':
+  //    var panelId = domino.MakePanel(-1, -1, screenGW + 2, screenGH + 2);
+  //    var rect = domino.AddRectangle(panelId, 0, 0, screenGW + 2, screenGH + 2, 0, Vec4i.black, Vec4i.black);
+  //    GameToDominoConnection.IEventHandler remove = null;
+  //    var onClick = domino.MakeEvent(() => {
+  //      Console.WriteLine("clicked!");
+  //      remove();
+  //    });
+  //    var onMouseIn = domino.MakeEvent(() => Console.WriteLine("mouse in!"));
+  //    var onMouseOut = domino.MakeEvent(() => Console.WriteLine("mouse out!"));
+  //    var button = domino.AddButton(
+  //        rect, 2, 2, 15, 4, 0, new Vec4i(153, 153, 153, 255), new Vec4i(153, 153, 153, 255), new Vec4i(102, 102, 102, 255), onClick, onMouseIn, onMouseOut);
+  //    var strIds = domino.AddString(button, 3, 3, 15, Vec4i.cyan, "Cascadia", "hello");
+  //    remove = () => {
+  //      foreach (var id in strIds) {
+  //        domino.RemoveView(id);
+  //      }
+  //      domino.RemoveView(button);
+  //      domino.DestroyEvent(onMouseOut);
+  //      domino.DestroyEvent(onMouseIn);
+  //      domino.DestroyEvent(onClick);
+  //      domino.RemoveView(rect);
+  //      domino.RemoveView(panelId);
+  //    };
+  //    break;
+  //  case '\u007F':
+  //    foreach (var loc in new SortedSet<Location>(selectedLocations)) {
+  //      selectedLocations.Remove(loc);
+  //      var tile = terrainPresenter.terrain.tiles[loc];
+  //      terrainPresenter.terrain.tiles.Remove(loc);
+  //      tile.Destruct();
+  //    }
+  //    Save();
+  //    UpdateLookPanelView();
+  //    break;
+  //}
+}
+
+func makeKeyCodeToMemberMap() HashMap<str, str, StrHasher, StrEquator> {
+  map = HashMap<str, str, StrHasher, StrEquator>(StrHasher(), StrEquator());
+  map!.add("#", "wall");
+  map!.add("`", "water");
+  map!.add("b", "fire");
+  map!.add("c", "cave");
+  map!.add("d", "dirt");
+  map!.add("f", "floor");
+  map!.add("g", "grass");
+  map!.add("h", "healthPotion");
+  map!.add("l", "magma");
+  map!.add("m", "mud");
+  map!.add("o", "obsidian");
+  map!.add("p", "manaPotion");
+  map!.add("r", "rocks");
+  map!.add("s", "darkRocks");
+  map!.add("t", "tree");
+  map!.add("v", "avelisk");
+  map!.add("w", "caveWall");
+  map!.add("x", "marker");
+  map!.add("y", "zeddy");
+  map!.add("z", "obsidianFloor");
+  ret map;
+}

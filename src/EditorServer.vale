@@ -1,0 +1,237 @@
+import stdlib.*;
+import domino.*;
+import stdlib.path.*;
+import stdlib.resultutils.*;
+import rocketvale.*;
+import valejson.*;
+import stdlib.stringutils.*;
+import domino.model.*;
+import domino.model.animation.*;
+import domino.network.*;
+
+struct EditorServer {
+  resourcesPath str;
+  instance! Opt<EditorInstance>;
+}
+impl IRequestHandler for EditorServer;
+
+struct EditorInstance {
+  domino GameToDominoConnection;
+  vivimap MemberToViewMapper;
+  terrainController TerrainController;
+  selectedLocations! HashSet<Location, LocationHasher, LocationEquator>;
+}
+
+func HandleEvent(
+  server &!EditorServer,
+  node &JsonObject)
+Result<JsonNode, str> {
+  maybe_event_type_str = expect_obj_member_str(node, "event_type");
+  if maybe_event_type_str.is_err() {
+    ret Err<JsonNode, str>(maybe_event_type_str.expect_err());
+  }
+  event_type_str = maybe_event_type_str.expect();
+
+  if event_type_str == "Start" {
+    maybe_request = ParseStartRequest(&node);
+    if maybe_request.is_err() {
+      ret Err<JsonNode, str>(maybe_request.expect_err());
+    }
+    request = (maybe_request).expect();
+
+    maybe_instance = HandleStartRequest(server.resourcesPath, &request);
+    if maybe_instance.is_err() {
+      ret Err<JsonNode, str>(maybe_instance.expect_err());
+    }
+    instance = (maybe_instance).expect();
+    
+    set server.instance = Some(instance);
+  } else if event_type_str == "SetHoveredLocation" {
+    maybe_request = ParseSetHoveredLocationRequest(&node);
+    if maybe_request.is_err() {
+      ret Err<JsonNode, str>(maybe_request.expect_err());
+    }
+    request = (maybe_request).expect();
+
+    maybe_result = HandleSetHoveredLocationRequest(&!server.instance!.get(), &request);
+    if maybe_result.is_err() {
+      ret Err<JsonNode, str>((maybe_result).expect_err());
+    }
+  } else if event_type_str == "LocationMouseDown" {
+    maybe_request = ParseLocationMouseDownRequest(&node);
+    if maybe_request.is_err() {
+      ret Err<JsonNode, str>(maybe_request.expect_err());
+    }
+    request = (maybe_request).expect();
+
+    maybe_result = HandleLocationMouseDownRequest(&!server.instance!.get(), &request);
+    if maybe_result.is_err() {
+      ret Err<JsonNode, str>((maybe_result).expect_err());
+    }
+  } else if event_type_str == "KeyDown" {
+    maybe_request = ParseKeyDownRequest(&node);
+    if maybe_request.is_err() {
+      ret Err<JsonNode, str>(maybe_request.expect_err());
+    }
+    request = (maybe_request).expect();
+
+    maybe_result = HandleKeyDownRequest(&!server.instance!.get(), &request);
+    if maybe_result.is_err() {
+      ret Err<JsonNode, str>((maybe_result).expect_err());
+    }
+  } else {
+    ret Err<JsonNode, str>("Unknown request type: " + event_type_str);
+  }
+
+  commands_json_arr =
+    JsonArray(
+      if not server.instance.isEmpty() {
+        server.instance!.get().domino!.TakeCommands()
+      } else {
+        Array<mut, JsonNode>(0)
+      });
+  response_obj = JsonObject();
+  response_obj.fields!.add("commands", commands_json_arr);
+  ret Ok<JsonNode, str>(response_obj);
+}
+
+func handle(self &!EditorServer impl IRequestHandler, request_path str, request_json str) str {
+  maybe_request_root_node = jsonToNode(request_json.slice());
+  if maybe_request_root_node.is_err() {
+    ret "Couldn't parse request: " + maybe_request_root_node.expect_err();
+  }
+  request_root_node = (maybe_request_root_node).expect();
+
+  maybe_request_root_obj = (request_root_node).as<JsonObject>();
+  if maybe_request_root_obj.is_err() {
+    ret "Request wasn't json object!";
+  }
+  request_root_obj = (maybe_request_root_obj).expect();
+
+  response_obj_result = HandleEvent(self, &request_root_obj);
+  if response_obj_result.is_err() {
+    ret "Error: " + response_obj_result.expect_err();
+  }
+  response_obj = (response_obj_result).expect();
+
+  ret "Response: " + response_obj.str();
+}
+
+func SetSelection(
+    server &!EditorInstance,
+    locations HashSet<Location, LocationHasher, LocationEquator>) {
+  set server.selectedLocations =
+      locations.HashSet<Location, LocationHasher, LocationEquator>(
+          LocationHasher(), LocationEquator());
+
+  server.terrainController!.SetSelectedLocations(locations);
+
+  //SortedSet<string> commonMembers = null;
+  //foreach (var loc in selectedLocations) {
+  //  if (commonMembers == null) {
+  //    commonMembers = new SortedSet<string>();
+  //    foreach (var member in terrainController.terrain.tiles[loc].members) {
+  //      commonMembers.Add(member);
+  //    }
+  //  } else {
+  //    var members = new SortedSet<string>();
+  //    foreach (var member in terrainController.terrain.tiles[loc].members) {
+  //      members.Add(member);
+  //    }
+  //    foreach (var member in new SortedSet<string>(commonMembers)) {
+  //      if (!members.Contains(member)) {
+  //        commonMembers.Remove(member);
+  //      }
+  //    }
+  //  }
+  //}
+
+  //var entries = new List<ListView.Entry>();
+  //if (commonMembers != null) {
+  //  foreach (var member in commonMembers) {
+  //    entries.Add(new ListView.Entry(new SymbolId("AthSymbols", 0x0072), member));
+  //  }
+  //}
+  //membersView.ShowEntries(entries);
+}
+
+func ChangeMember(
+    server &!EditorInstance,
+    member str,
+    addKeyDown bool,
+    removeKeyDown bool) {
+  if (addKeyDown and removeKeyDown) {
+    ret void();
+  } else if (addKeyDown) {
+    // Add one to each tile
+    foreach loc in server.selectedLocations {
+      presenter = (server.terrainController.tilePresenters.get(loc)).get();
+      presenter!.AddMember(member);
+    }
+  } else if (removeKeyDown) {
+    foreach loc in server.selectedLocations {
+      presenter = (server.terrainController.tilePresenters.get(loc)).get();
+      if (server.LocationHasMember(loc, member)) {
+        presenter!.RemoveMember(member);
+      }
+    }
+  } else {
+    // Toggle; ensure it's there if its not
+    if (not server.AllLocationsHaveMember(&server.selectedLocations, member)) {
+      foreach loc in server.selectedLocations {
+        presenter = (server.terrainController.tilePresenters.get(loc)).get();
+        // Add it if its not already there
+        if (not server.LocationHasMember(loc, member)) {
+          presenter!.AddMember(member);
+        }
+      }
+    } else {
+      foreach loc in server.selectedLocations {
+        presenter = (server.terrainController.tilePresenters.get(loc)).get();
+        // Remove all of them that are present
+        while (server.LocationHasMember(loc, member)) {
+          presenter!.RemoveMember(member);
+        }
+      }
+    }
+  }
+}
+
+
+func AllLocationsHaveMember(
+    server &EditorInstance,
+    locations &HashSet<Location, LocationHasher, LocationEquator>,
+    member str)
+bool {
+  foreach location in locations {
+    if not server.LocationHasMember(location, member) {
+      ret false;
+    }
+  }
+  ret true;
+}
+
+func LocationHasMember(
+    server &EditorInstance,
+    location Location,
+    member str)
+bool {
+  foreach hayMember in server.terrainController.terrain.tiles.get(location).get().members {
+    if member == hayMember {
+      ret true;
+    }
+  }
+  ret false;
+}
+
+
+// TODO:
+// - put the panic back in in MemberToViewMapper, we were hitting constraint violations,
+//   need to be able to unlet some locals for it.
+exported func main() {
+  if numMainArgs() < 2 {
+    panic("Supply resources path!");
+  }
+  resourcesPath = getMainArg(1);
+  runServer(&EditorServer(resourcesPath, None<EditorInstance>()));
+}
