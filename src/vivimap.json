@@ -13,7 +13,7 @@
   },
   "rocks": {
     "overlay": {
-      "glyph": { "symbol_id": {"font_name": "AthSymbols", "unicode": 102}, "color": [128, 128, 128, 50] },
+      "glyph": { "symbol_id": {"font_name": "AthSymbols", "unicode": 102}, "color": [48, 40, 40, 25] },
       "outline": {"type": "outer", "color": [0, 0, 0] }
     }
   },

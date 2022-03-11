@@ -83,7 +83,7 @@ i64 {
   patternTileIndex = location.index_in_group;
   shapeIndex = pattern.pattern_tiles.get(patternTileIndex).shape_index;
   tileDescription = GetTileDescription(pattern, location, elevationStepHeight, highlighted);
-  ret domino!.create_tile(tileDescription);
+  ret domino!.CreateTile(tileDescription);
 }
 
 func ResetViews(self &!PhantomTilePresenter) {
@@ -146,7 +146,9 @@ InitialTile {
       1,
       frontColor,
       sideColor,
-      None<InitialSymbol>());
+      None<InitialSymbol>(),
+      None<InitialSymbol>(),
+      List<(i64, InitialSymbol)>());
 }
 
 //     // public void OnStrMutListEffect(IStrMutListEffect effect) {

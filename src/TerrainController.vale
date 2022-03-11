@@ -14,7 +14,8 @@ struct TerrainController {
 
   domino &!GameToDominoConnection;
   vivimap &MemberToViewMapper;
-  terrain Terrain;
+  terrain PatternMap<TerrainTile>;
+  elevationStepHeight int;
 
   tilePresenters HashMap<Location, TerrainTilePresenter, LocationHasher, LocationEquator>;
   phantomTilePresenters HashMap<Location, PhantomTilePresenter, LocationHasher, LocationEquator>;
@@ -27,7 +28,8 @@ struct TerrainController {
 func TerrainController(
     domino &!GameToDominoConnection,
     vivimap &MemberToViewMapper,
-    terrain Terrain)
+    terrain PatternMap<TerrainTile>,
+    elevationStepHeight int)
 TerrainController {
   //this.domino = domino;
   //this.terrain = terrain;
@@ -37,6 +39,7 @@ TerrainController {
       domino,
       vivimap,
       terrain,
+      elevationStepHeight,
       HashMap<Location, TerrainTilePresenter, LocationHasher, LocationEquator>(
         LocationHasher(), LocationEquator()),
       HashMap<Location, PhantomTilePresenter, LocationHasher, LocationEquator>(
@@ -153,7 +156,7 @@ func AddTerrainTile(self &!TerrainController, location Location, tile &!TerrainT
 func addPhantomTile(self &!TerrainController, location Location) {
   presenter =
       PhantomTilePresenter(
-          self.domino, &self.terrain.pattern, location, self.terrain.elevationStepHeight);
+          self.domino, &self.terrain.pattern, location, self.elevationStepHeight);
   self.phantomTilePresenters!.add(location, presenter);
 }
 

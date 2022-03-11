@@ -6,16 +6,20 @@ import rocketvale.*;
 import valejson.*;
 import stdlib.stringutils.*;
 import domino.model.*;
+import terrain.*;
+import terrain.model.*;
 import domino.model.animation.*;
 import domino.network.*;
 
 struct EditorServer {
   resourcesPath str;
+  levelPath str;
   instance! Opt<EditorInstance>;
 }
 impl IRequestHandler for EditorServer;
 
 struct EditorInstance {
+  levelPath str;
   domino GameToDominoConnection;
   vivimap MemberToViewMapper;
   terrainController TerrainController;
@@ -39,7 +43,7 @@ Result<JsonNode, str> {
     }
     request = (maybe_request).expect();
 
-    maybe_instance = HandleStartRequest(server.resourcesPath, &request);
+    maybe_instance = HandleStartRequest(server.resourcesPath, server.levelPath, &request);
     if maybe_instance.is_err() {
       ret Err<JsonNode, str>(maybe_instance.expect_err());
     }
@@ -229,9 +233,10 @@ bool {
 // - put the panic back in in MemberToViewMapper, we were hitting constraint violations,
 //   need to be able to unlet some locals for it.
 exported func main() {
-  if numMainArgs() < 2 {
-    panic("Supply resources path!");
+  if numMainArgs() < 3 {
+    panic("Usage: geomancer vivimap.json level.lev");
   }
   resourcesPath = getMainArg(1);
-  runServer(&EditorServer(resourcesPath, None<EditorInstance>()));
+  levelPath = getMainArg(2);
+  runServer(&EditorServer(resourcesPath, levelPath, None<EditorInstance>()));
 }
