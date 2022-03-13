@@ -14,40 +14,74 @@ Result<(), str> {
   location = request.location;
 
 
-  if server.terrainController.tilePresenters.ContainsKey(location) {
-    // Add or remove from selection
-
-    newSelection =
-        server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
-            LocationHasher(), LocationEquator());
-    if newSelection.contains(location) {
-      newSelection!.remove(location);
-    } else {
-      newSelection!.add(location);
+  if server.selectingForPathfinding {
+    if not server.terrainController.tilePresenters.ContainsKey(location) {
+      server.lookPanelView!.SetStuff(true, "Can't navigate there!", "", List<(InitialSymbol, str)>());
+      set server.selectingForPathfinding = false;
+      ret Ok<(), str>(());
     }
-    server!.SetSelection(newSelection);
-  } else if server.terrainController.phantomTilePresenters.ContainsKey(location) {
-    phantomTilePresenter =
-        server.terrainController.phantomTilePresenters!.remove(location);
-    drop(phantomTilePresenter);
+    if server.selectedLocations.len() != 1 {
+      server.lookPanelView!.SetStuff(true, "Must find path from 1 location!", "", List<(InitialSymbol, str)>());
+      set server.selectingForPathfinding = false;
+      ret Ok<(), str>(());
+    }
+    startLocation = server.selectedLocations.begin()!.next().get();
 
-    terrainTile = TerrainTile(location, 1, List<str>());
-    borrow = &!terrainTile;
-    server.terrainController.terrain.tiles!.add(location, terrainTile);
-    server.terrainController!.AddTerrainTile(location, borrow);
-    //Save();
-
-    newSelection =
-        server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
-            LocationHasher(), LocationEquator());
-    newSelection!.add(location);
-    server!.SetSelection(newSelection);
+    path =
+        Go(
+            &server.terrainController.terrain.pattern,
+            startLocation,
+            location,
+            true,
+            (a, b, _) => {
+              server.terrainController.terrain.tiles.ContainsKey(b) and
+              server.terrainController.terrain.pattern.IsAdjacent(a, b, false)
+            });
+    if path.len() == 0 {
+      server.lookPanelView!.SetStuff(true, "No path!", "", List<(InitialSymbol, str)>());
+    } else {
+      newSelection =
+          HashSet<Location, LocationHasher, LocationEquator>(
+              LocationHasher(), LocationEquator());
+      foreach x in &path {
+        newSelection!.add(x);
+      }
+      server!.SetSelection(newSelection);
+    }
+    set server.selectingForPathfinding = false;
+    ret Ok<(), str>(());
   } else {
+    if server.terrainController.tilePresenters.ContainsKey(location) {
+      // Add or remove from selection
 
+      newSelection =
+          server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
+              LocationHasher(), LocationEquator());
+      if newSelection.contains(location) {
+        newSelection!.remove(location);
+      } else {
+        newSelection!.add(location);
+      }
+      server!.SetSelection(newSelection);
+    } else if server.terrainController.phantomTilePresenters.ContainsKey(location) {
+      phantomTilePresenter =
+          server.terrainController.phantomTilePresenters!.remove(location);
+      drop(phantomTilePresenter);
+
+      terrainTile = TerrainTile(location, 1, List<str>());
+      borrow = &!terrainTile;
+      server.terrainController.terrain.tiles!.add(location, terrainTile);
+      server.terrainController!.AddTerrainTile(location, borrow);
+      //Save();
+
+      newSelection =
+          server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
+              LocationHasher(), LocationEquator());
+      newSelection!.add(location);
+      server!.SetSelection(newSelection);
+    } else {
+
+    }
+    ret Ok<(), str>(());
   }
-
-
-
-
-  ret Ok<(), str>(());
 }

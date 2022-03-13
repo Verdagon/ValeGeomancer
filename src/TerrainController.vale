@@ -57,10 +57,10 @@ TerrainController {
   ret self;
 }
 
-//   public Location GetMaybeMouseHighlightLocation() {
-//     return maybeMouseHighlightedLocation;
-//   }
-// 
+func GetMaybeMouseHighlightLocation(self &TerrainController) Opt<Location> {
+  ret self.maybeMouseHighlightedLocation.clone();
+}
+
 //   public void DestroyTerrainController() {
 //     foreach entry in tilePresenters {
 //       entry.Value.DestroyTerrainTilePresenter();
@@ -105,9 +105,9 @@ func UpdateLocationHighlighted(self &!TerrainController, location Location) {
 // 
 //   public TerrainTilePresenter GetTilePresenter(Location location) {
 //     if tilePresenters.TryGetValue(location, out var presenter) {
-//       return presenter;
+//       ret presenter;
 //     }
-//     return null;
+//     ret null;
 //   }
 // 
 func RefreshPhantomTiles(self &!TerrainController) {
@@ -173,21 +173,6 @@ func SetSelectedLocations(
     self!.UpdateLocationHighlighted(removedLocation);
   }
 }
-
-
-func ==<T>(a &Opt<T>, b &Opt<T>) bool {
-  if a.isEmpty() and b.isEmpty() {
-    ret true;
-  }
-  if not a.isEmpty() and not b.isEmpty() {
-    ret a.get() == b.get();
-  }
-  ret false;
-}
-
-abstract func clone<T>(virtual self &Opt<T>) Opt<T>;
-func clone<T>(self &None<T> impl Opt<T>) Opt<T> { None<T>() }
-func clone<T>(self &Some<T> impl Opt<T>) Opt<T> { Some<T>(self.get().clone()) }
 
 
 func SetHoveredLocation(self &!TerrainController, newMaybeMouseHighlightedLocation &Opt<Location>) {

@@ -112,23 +112,23 @@ func ResetViews(self &!PhantomTilePresenter) {
 //     //   switch (pattern.name) {
 //     //     case "square":
 //     //       if patternTile.shapeIndex == 0 {
-//     //         return SymbolId("AthSymbols", 0x006A);
+//     //         ret SymbolId("AthSymbols", 0x006A);
 //     //       }
 //     //       break;
 //     //     case "pentagon9":
 //     //       if patternTile.shapeIndex == 0 {
-//     //         return SymbolId("AthSymbols", 0x0069);
+//     //         ret SymbolId("AthSymbols", 0x0069);
 //     //       } else if patternTile.shapeIndex == 1 {
-//     //         return SymbolId("AthSymbols", 0x0068);
+//     //         ret SymbolId("AthSymbols", 0x0068);
 //     //       }
 //     //       break;
 //     //     case "hex":
 //     //       if patternTile.shapeIndex == 0 {
-//     //         return SymbolId("AthSymbols", 0x0035);
+//     //         ret SymbolId("AthSymbols", 0x0035);
 //     //       }
 //     //       break;
 //     //   }
-//     //   return SymbolId("AthSymbols", 0x0065);
+//     //   ret SymbolId("AthSymbols", 0x0065);
 //     // }
 //     //
 func GetTileDescription(

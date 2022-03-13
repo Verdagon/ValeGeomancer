@@ -24,6 +24,10 @@ struct EditorInstance {
   vivimap MemberToViewMapper;
   terrainController TerrainController;
   selectedLocations! HashSet<Location, LocationHasher, LocationEquator>;
+  maybeLookedLocation! Opt<Location>;
+  membersView ListView;
+  lookPanelView LookPanelView;
+  selectingForPathfinding! bool;
 }
 
 func HandleEvent(
@@ -125,38 +129,31 @@ func SetSelection(
     server &!EditorInstance,
     locations HashSet<Location, LocationHasher, LocationEquator>) {
   set server.selectedLocations =
-      locations.HashSet<Location, LocationHasher, LocationEquator>(
-          LocationHasher(), LocationEquator());
+      locations.HashSet(LocationHasher(), LocationEquator());
 
-  server.terrainController!.SetSelectedLocations(locations);
+  server.terrainController!.SetSelectedLocations(
+      locations.HashSet(LocationHasher(), LocationEquator()));
 
-  //SortedSet<string> commonMembers = null;
-  //foreach (var loc in selectedLocations) {
-  //  if (commonMembers == null) {
-  //    commonMembers = new SortedSet<string>();
-  //    foreach (var member in terrainController.terrain.tiles[loc].members) {
-  //      commonMembers.Add(member);
-  //    }
-  //  } else {
-  //    var members = new SortedSet<string>();
-  //    foreach (var member in terrainController.terrain.tiles[loc].members) {
-  //      members.Add(member);
-  //    }
-  //    foreach (var member in new SortedSet<string>(commonMembers)) {
-  //      if (!members.Contains(member)) {
-  //        commonMembers.Remove(member);
-  //      }
-  //    }
-  //  }
-  //}
+  member_to_count = HashMap<str, int>(StrHasher(), StrEquator());
+  foreach loc in &locations {
+    members = server.terrainController.terrain.tiles.get(loc).get().members;
+    foreach member in members {
+      if member_to_count.ContainsKey(member) {
+        member_to_count!.update(member, member_to_count.get(member).get() + 1);
+      } else {
+        member_to_count!.add(member, 1);
+      }
+    }
+  }
 
-  //var entries = new List<ListView.Entry>();
-  //if (commonMembers != null) {
-  //  foreach (var member in commonMembers) {
-  //    entries.Add(new ListView.Entry(new SymbolId("AthSymbols", 0x0072), member));
-  //  }
-  //}
-  //membersView.ShowEntries(entries);
+  entries = List<(SymbolId, str)>();
+  foreach [member, count] in member_to_count {
+    println("{member}: {count}/{locations.len()}");
+    if count == locations.len() {
+      entries!.add((SymbolId("AthSymbols", 114), member));
+    }
+  }
+  server.membersView!.ShowEntries(entries);
 }
 
 func ChangeMember(
@@ -227,6 +224,43 @@ bool {
   }
   ret false;
 }
+
+
+func UpdateLookPanelView(server &!EditorInstance) {
+  maybeLocation = server.terrainController.GetMaybeMouseHighlightLocation();
+  if &maybeLocation != &server.maybeLookedLocation {
+    set server.maybeLookedLocation = maybeLocation.clone();
+    if maybeLocation.isEmpty() {
+      server.lookPanelView!.SetStuff(false, "", "", List<(InitialSymbol, str)>());
+    } else {
+      location = maybeLocation.get();
+      message = "(" + location.group_x + ", " + location.group_y + ", " + location.index_in_group + ")";
+
+      symbolsAndDescriptions = List<(InitialSymbol, str)>();
+      if server.terrainController.terrain.tiles.ContainsKey(location) {
+        set message = message + " elevation " + server.terrainController.terrain.tiles.get(location).get().elevation;
+        foreach member in server.terrainController.terrain.tiles.get(location).get().members {
+          symbol =
+              InitialSymbol(
+                  InitialSymbolGlyph(
+                      SymbolId("AthSymbols", 114),
+                      ConstantVec4iAnimation(Vec4i(255, 255, 255, 255))),
+                  Some(
+                      InitialSymbolOutline(
+                          OuterOutline(),
+                          ConstantVec4iAnimation(Vec4i(0, 0, 0, 0)))),
+                  None<InitialSymbolSides>(),
+                  180,
+                  100);
+          symbolsAndDescriptions!.add((symbol, member));
+        }
+      }
+
+      server.lookPanelView!.SetStuff(true, message, "", symbolsAndDescriptions);
+    }
+  }
+}
+
 
 
 // TODO:

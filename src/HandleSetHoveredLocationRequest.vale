@@ -14,5 +14,7 @@ Result<(), str> {
 
   server.terrainController!.SetHoveredLocation(request.location);
 
+  server!.UpdateLookPanelView();
+
   ret Ok<(), str>(());
 }

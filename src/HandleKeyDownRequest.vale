@@ -24,7 +24,27 @@ Result<(), str> {
   println("Got key down: " + c);
 
   if c == 27 {
-    println("Got escape!");
+    newSelection =
+        server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
+            LocationHasher(), LocationEquator());
+    server!.SetSelection(newSelection);
+    server!.UpdateLookPanelView();
+  } else if c == 96 or c == 63 {
+    if server.selectingForPathfinding {
+      server.lookPanelView!.SetStuff(true, "Canceled pathfinding.", "", List<(InitialSymbol, str)>());
+      server!.UpdateLookPanelView();
+      set server.selectingForPathfinding = false;
+    } else {
+      println("Starting pathfinding");
+      if server.selectedLocations.len() == 0 {
+        server.lookPanelView!.SetStuff(true, "Select a location to path from.", "", List<(InitialSymbol, str)>());
+      } else if server.selectedLocations.len() > 1 {
+        server.lookPanelView!.SetStuff(true, "Select only one location to path from.", "", List<(InitialSymbol, str)>());
+      } else {
+        server.lookPanelView!.SetStuff(true, "Select location for pathfinding!", "", List<(InitialSymbol, str)>());
+        set server.selectingForPathfinding = true;
+      }
+    }
   } else if c == 61 { // = and + and -2
     foreach loc in server.selectedLocations {
       presenter = (server.terrainController.tilePresenters.get(loc)).get();
@@ -32,7 +52,7 @@ Result<(), str> {
       presenter!.SetElevation(oldElevation + 1);
     }
     Save(server);
-    //UpdateLookPanelView();
+    server!.UpdateLookPanelView();
   } else if c == 45 { // - and _ and -1
     foreach loc in server.selectedLocations {
       presenter = (server.terrainController.tilePresenters.get(loc)).get();
@@ -41,7 +61,7 @@ Result<(), str> {
       presenter!.SetElevation(newElevation);
     }
     Save(server);
-    //UpdateLookPanelView();
+    server!.UpdateLookPanelView();
   }
   keyCodeToMemberMap = makeKeyCodeToMemberMap();
   foreach [keyCode, member] in keyCodeToMemberMap {
@@ -51,7 +71,7 @@ Result<(), str> {
       server!.ChangeMember(member, addKeyDown, removeKeyDown);
       Save(server);
     }
-    //UpdateLookPanelView();
+    server!.UpdateLookPanelView();
   }
 
   ret Ok<(), str>(());
@@ -100,7 +120,7 @@ Result<(), str> {
   //      tile.Destruct();
   //    }
   //    Save();
-  //    UpdateLookPanelView();
+  //    server!.UpdateLookPanelView();
   //    break;
   //}
 }
@@ -108,7 +128,6 @@ Result<(), str> {
 func makeKeyCodeToMemberMap() HashMap<str, str, StrHasher, StrEquator> {
   map = HashMap<str, str, StrHasher, StrEquator>(StrHasher(), StrEquator());
   map!.add("#", "wall");
-  map!.add("`", "water");
   map!.add("b", "fire");
   map!.add("c", "cave");
   map!.add("d", "dirt");

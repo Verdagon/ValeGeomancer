@@ -105,7 +105,7 @@ func initialized(self &TerrainTilePresenter) bool {
 //     private static Vec3 CalculatePosition(int elevationStepHeight, Pattern pattern, Location location, int elevation) {
 //       var positionVec2 = pattern.GetTileCenter(location);
 //       var positionVec3 = new Vec3(positionVec2.x, positionVec2.y, elevation * elevationStepHeight);
-//       return positionVec3;
+//       ret positionVec3;
 //     }
 // 
 func SetHighlighted(self &!TerrainTilePresenter, highlighted bool) {
@@ -476,7 +476,7 @@ func SetElevation(self &!TerrainTilePresenter, elevation int) {
 //     //
 //     //   var (tileDescription, unitDescription) =
 //     //     vivimap.Vivify(defaultTileDescription, defaultUnitDescription, members);
-//     //   return (tileDescription, unitDescription);
+//     //   ret (tileDescription, unitDescription);
 //     // }
 // 
 //     public void DestroyTerrainTilePresenter() {

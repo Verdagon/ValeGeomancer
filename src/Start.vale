@@ -36,7 +36,13 @@ Result<EditorInstance, str> {
 
   vivimap = MemberToViewMapperLoadMap(resourcesPath, "vivimap.json");
 
+  membersView = ListView(&!domino, 0, 6, 40, 16);
+  lookPanelView = LookPanelView(&!domino, start_request.screen_gw, -1, 2);
+
   terrain_controller = TerrainController(&!domino, &vivimap, terrain, 200);
+
+  selectingForPathfinding = false;
+
   instance =
     EditorInstance(
       levelPath,
@@ -44,7 +50,11 @@ Result<EditorInstance, str> {
       vivimap,
       terrain_controller,
       HashSet<Location, LocationHasher, LocationEquator>(
-        LocationHasher(), LocationEquator()));
+        LocationHasher(), LocationEquator()),
+      None<Location>(),
+      membersView,
+      lookPanelView,
+      selectingForPathfinding);
 
   ret Ok<EditorInstance, str>(instance);
 }
