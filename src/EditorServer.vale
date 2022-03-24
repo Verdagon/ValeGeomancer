@@ -31,7 +31,7 @@ struct EditorInstance {
 }
 
 func HandleEvent(
-  server &!EditorServer,
+  server &EditorServer,
   node &JsonObject)
 Result<JsonNode, str> {
   maybe_event_type_str = expect_obj_member_str(node, "event_type");
@@ -61,7 +61,7 @@ Result<JsonNode, str> {
     }
     request = (maybe_request).expect();
 
-    maybe_result = HandleSetHoveredLocationRequest(&!server.instance!.get(), &request);
+    maybe_result = HandleSetHoveredLocationRequest(&server.instance.get(), &request);
     if maybe_result.is_err() {
       ret Err<JsonNode, str>((maybe_result).expect_err());
     }
@@ -72,7 +72,7 @@ Result<JsonNode, str> {
     }
     request = (maybe_request).expect();
 
-    maybe_result = HandleLocationMouseDownRequest(&!server.instance!.get(), &request);
+    maybe_result = HandleLocationMouseDownRequest(&server.instance.get(), &request);
     if maybe_result.is_err() {
       ret Err<JsonNode, str>((maybe_result).expect_err());
     }
@@ -83,7 +83,7 @@ Result<JsonNode, str> {
     }
     request = (maybe_request).expect();
 
-    maybe_result = HandleKeyDownRequest(&!server.instance!.get(), &request);
+    maybe_result = HandleKeyDownRequest(&server.instance.get(), &request);
     if maybe_result.is_err() {
       ret Err<JsonNode, str>((maybe_result).expect_err());
     }
@@ -94,16 +94,16 @@ Result<JsonNode, str> {
   commands_json_arr =
     JsonArray(
       if not server.instance.isEmpty() {
-        server.instance!.get().domino!.TakeCommands()
+        server.instance.get().domino.TakeCommands()
       } else {
         Array<mut, JsonNode>(0)
       });
   response_obj = JsonObject();
-  response_obj.fields!.add("commands", commands_json_arr);
+  response_obj.fields.add("commands", commands_json_arr);
   ret Ok<JsonNode, str>(response_obj);
 }
 
-func handle(self &!EditorServer impl IRequestHandler, request_path str, request_json str) str {
+func handle(self &EditorServer, request_path str, request_json str) str {
   maybe_request_root_node = jsonToNode(request_json.slice());
   if maybe_request_root_node.is_err() {
     ret "Couldn't parse request: " + maybe_request_root_node.expect_err();
@@ -126,12 +126,12 @@ func handle(self &!EditorServer impl IRequestHandler, request_path str, request_
 }
 
 func SetSelection(
-    server &!EditorInstance,
+    server &EditorInstance,
     locations HashSet<Location, LocationHasher, LocationEquator>) {
   set server.selectedLocations =
       locations.HashSet(LocationHasher(), LocationEquator());
 
-  server.terrainController!.SetSelectedLocations(
+  server.terrainController.SetSelectedLocations(
       locations.HashSet(LocationHasher(), LocationEquator()));
 
   member_to_count = HashMap<str, int>(StrHasher(), StrEquator());
@@ -139,9 +139,9 @@ func SetSelection(
     members = server.terrainController.terrain.tiles.get(loc).get().members;
     foreach member in members {
       if member_to_count.ContainsKey(member) {
-        member_to_count!.update(member, member_to_count.get(member).get() + 1);
+        member_to_count.update(member, member_to_count.get(member).get() + 1);
       } else {
-        member_to_count!.add(member, 1);
+        member_to_count.add(member, 1);
       }
     }
   }
@@ -150,14 +150,14 @@ func SetSelection(
   foreach [member, count] in member_to_count {
     println("{member}: {count}/{locations.len()}");
     if count == locations.len() {
-      entries!.add((SymbolId("AthSymbols", 114), member));
+      entries.add((SymbolId("AthSymbols", 114), member));
     }
   }
-  server.membersView!.ShowEntries(entries);
+  server.membersView.ShowEntries(entries);
 }
 
 func ChangeMember(
-    server &!EditorInstance,
+    server &EditorInstance,
     member str,
     addKeyDown bool,
     removeKeyDown bool) {
@@ -167,13 +167,13 @@ func ChangeMember(
     // Add one to each tile
     foreach loc in server.selectedLocations {
       presenter = (server.terrainController.tilePresenters.get(loc)).get();
-      presenter!.AddMember(member);
+      presenter.AddMember(member);
     }
   } else if (removeKeyDown) {
     foreach loc in server.selectedLocations {
       presenter = (server.terrainController.tilePresenters.get(loc)).get();
       if (server.LocationHasMember(loc, member)) {
-        presenter!.RemoveMember(member);
+        presenter.RemoveMember(member);
       }
     }
   } else {
@@ -183,7 +183,7 @@ func ChangeMember(
         presenter = (server.terrainController.tilePresenters.get(loc)).get();
         // Add it if its not already there
         if (not server.LocationHasMember(loc, member)) {
-          presenter!.AddMember(member);
+          presenter.AddMember(member);
         }
       }
     } else {
@@ -191,7 +191,7 @@ func ChangeMember(
         presenter = (server.terrainController.tilePresenters.get(loc)).get();
         // Remove all of them that are present
         while (server.LocationHasMember(loc, member)) {
-          presenter!.RemoveMember(member);
+          presenter.RemoveMember(member);
         }
       }
     }
@@ -226,12 +226,12 @@ bool {
 }
 
 
-func UpdateLookPanelView(server &!EditorInstance) {
+func UpdateLookPanelView(server &EditorInstance) {
   maybeLocation = server.terrainController.GetMaybeMouseHighlightLocation();
   if &maybeLocation != &server.maybeLookedLocation {
     set server.maybeLookedLocation = maybeLocation.clone();
     if maybeLocation.isEmpty() {
-      server.lookPanelView!.SetStuff(false, "", "", List<(InitialSymbol, str)>());
+      server.lookPanelView.SetStuff(false, "", "", List<(InitialSymbol, str)>());
     } else {
       location = maybeLocation.get();
       message = "(" + location.group_x + ", " + location.group_y + ", " + location.index_in_group + ")";
@@ -252,11 +252,11 @@ func UpdateLookPanelView(server &!EditorInstance) {
                   None<InitialSymbolSides>(),
                   180,
                   100);
-          symbolsAndDescriptions!.add((symbol, member));
+          symbolsAndDescriptions.add((symbol, member));
         }
       }
 
-      server.lookPanelView!.SetStuff(true, message, "", symbolsAndDescriptions);
+      server.lookPanelView.SetStuff(true, message, "", symbolsAndDescriptions);
     }
   }
 }

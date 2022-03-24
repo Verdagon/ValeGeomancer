@@ -1,14 +1,9 @@
 
-struct LocationMouseDownRequest {
-  tile_id int;
-  location Location;
-}
-
 func HandleLocationMouseDownRequest(
-  server &!EditorInstance,
+  server &EditorInstance,
   request &LocationMouseDownRequest)
 Result<(), str> {
-  domino = &!server.domino;
+  domino = &server.domino;
 
   println("In HandleLocationMouseDownRequest");
   location = request.location;
@@ -16,16 +11,16 @@ Result<(), str> {
 
   if server.selectingForPathfinding {
     if not server.terrainController.tilePresenters.ContainsKey(location) {
-      server.lookPanelView!.SetStuff(true, "Can't navigate there!", "", List<(InitialSymbol, str)>());
+      server.lookPanelView.SetStuff(true, "Can't navigate there!", "", List<(InitialSymbol, str)>());
       set server.selectingForPathfinding = false;
       ret Ok<(), str>(());
     }
     if server.selectedLocations.len() != 1 {
-      server.lookPanelView!.SetStuff(true, "Must find path from 1 location!", "", List<(InitialSymbol, str)>());
+      server.lookPanelView.SetStuff(true, "Must find path from 1 location!", "", List<(InitialSymbol, str)>());
       set server.selectingForPathfinding = false;
       ret Ok<(), str>(());
     }
-    startLocation = server.selectedLocations.begin()!.next().get();
+    startLocation = server.selectedLocations.begin()&.next()&.get();
 
     path =
         Go(
@@ -38,15 +33,15 @@ Result<(), str> {
               server.terrainController.terrain.pattern.IsAdjacent(a, b, false)
             });
     if path.len() == 0 {
-      server.lookPanelView!.SetStuff(true, "No path!", "", List<(InitialSymbol, str)>());
+      server.lookPanelView.SetStuff(true, "No path!", "", List<(InitialSymbol, str)>());
     } else {
       newSelection =
           HashSet<Location, LocationHasher, LocationEquator>(
               LocationHasher(), LocationEquator());
       foreach x in &path {
-        newSelection!.add(x);
+        newSelection.add(x);
       }
-      server!.SetSelection(newSelection);
+      server.SetSelection(newSelection);
     }
     set server.selectingForPathfinding = false;
     ret Ok<(), str>(());
@@ -58,27 +53,27 @@ Result<(), str> {
           server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
               LocationHasher(), LocationEquator());
       if newSelection.contains(location) {
-        newSelection!.remove(location);
+        newSelection.remove(location);
       } else {
-        newSelection!.add(location);
+        newSelection.add(location);
       }
-      server!.SetSelection(newSelection);
+      server.SetSelection(newSelection);
     } else if server.terrainController.phantomTilePresenters.ContainsKey(location) {
       phantomTilePresenter =
-          server.terrainController.phantomTilePresenters!.remove(location);
+          server.terrainController.phantomTilePresenters.remove(location);
       drop(phantomTilePresenter);
 
       terrainTile = TerrainTile(location, 1, List<str>());
-      borrow = &!terrainTile;
-      server.terrainController.terrain.tiles!.add(location, terrainTile);
-      server.terrainController!.AddTerrainTile(location, borrow);
+      borrow = &terrainTile;
+      server.terrainController.terrain.tiles.add(location, terrainTile);
+      server.terrainController.AddTerrainTile(location, borrow);
       //Save();
 
       newSelection =
           server.selectedLocations.HashSet<Location, LocationHasher, LocationEquator>(
               LocationHasher(), LocationEquator());
-      newSelection!.add(location);
-      server!.SetSelection(newSelection);
+      newSelection.add(location);
+      server.SetSelection(newSelection);
     } else {
 
     }

@@ -1,9 +1,4 @@
 
-struct StartRequest {
-  screen_gw int;
-  screen_gh int;
-}
-
 func HandleStartRequest(
   resourcesPath str,
   levelPath str,
@@ -18,28 +13,28 @@ Result<EditorInstance, str> {
       pattern.GetTileCenter(Location(0, 0, 0)).Vec3i(0); //terrain.GetTileCenter(startLocation);
   lookatOffsetToCamera = Vec3i(0, 5000, -10000);
 
-  domino!.SetupGame(
+  domino.SetupGame(
       cameraLookAtPosition,
       lookatOffsetToCamera,
       200,
       pattern);
 
   terrain = PatternMap<TerrainTile>(make_pentagon_9_pattern());
-  // terrain.tiles!.add(
+  // terrain.tiles.add(
   //   Location(0, 0, 0),
   //   TerrainTile(
   //     Location(0, 0, 0),
   //     6,
   //     List<str>()));
-  Load(levelPath, &!terrain);
+  Load(levelPath, &terrain);
 
 
   vivimap = MemberToViewMapperLoadMap(resourcesPath, "vivimap.json");
 
-  membersView = ListView(&!domino, 0, 6, 40, 16);
-  lookPanelView = LookPanelView(&!domino, start_request.screen_gw, -1, 2);
+  membersView = ListView(&domino, 0, 6, 40, 16);
+  lookPanelView = LookPanelView(&domino, start_request.screen_gw, -1, 2);
 
-  terrain_controller = TerrainController(&!domino, &vivimap, terrain, 200);
+  terrain_controller = TerrainController(&domino, &vivimap, terrain, 200);
 
   selectingForPathfinding = false;
 

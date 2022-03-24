@@ -1,9 +1,9 @@
 
 struct TerrainTilePresenter {
-  domino &!GameToDominoConnection;
+  domino &GameToDominoConnection;
   vivimap &MemberToViewMapper;
-  terrain &!PatternMap<TerrainTile>;
-  terrainTile &!TerrainTile;
+  terrain &PatternMap<TerrainTile>;
+  terrainTile &TerrainTile;
   location Location;
 
   tileViewId i64;
@@ -29,10 +29,10 @@ struct TerrainTilePresenter {
 }
 
 func TerrainTilePresenter(
-  domino &!GameToDominoConnection,
+  domino &GameToDominoConnection,
   vivimap &MemberToViewMapper,
-  terrain &!PatternMap<TerrainTile>,
-  terrainTile &!TerrainTile,
+  terrain &PatternMap<TerrainTile>,
+  terrainTile &TerrainTile,
   location Location)
 TerrainTilePresenter {
 
@@ -44,11 +44,11 @@ TerrainTilePresenter {
 
   membersFrontColors = List<(i64, Vec4iAnimation)>();
   front Vec4iAnimation = ConstantVec4iAnimationBlue();
-  membersFrontColors!.add((eternalMemberId, front));
+  membersFrontColors.add((eternalMemberId, front));
 
   membersSideColors = List<(i64, Vec4iAnimation)>();
   side Vec4iAnimation = ConstantVec4iAnimationBlue();
-  membersSideColors!.add((eternalMemberId, side));
+  membersSideColors.add((eternalMemberId, side));
 
   membersOverlays = List<(i64, InitialSymbol)>();
   membersFeatures = List<(i64, InitialSymbol)>();
@@ -63,7 +63,7 @@ TerrainTilePresenter {
           CalculateMaybeOverlay(&membersOverlays),
           CalculateMaybeFeature(&membersFeatures),
           membersItems);
-  tileViewId = domino!.CreateTile(initialTileDescription);
+  tileViewId = domino.CreateTile(initialTileDescription);
   unitViewId = 0i64;
 
   self =
@@ -89,10 +89,10 @@ TerrainTilePresenter {
       highlighted,
       selected);
 
-  self!.RefreshUnit();
+  self.RefreshUnit();
 
   foreach member in terrainTile.members {
-    self!.OnAddMember(member);
+    self.OnAddMember(member);
   }
 
   ret self;
@@ -108,20 +108,20 @@ func initialized(self &TerrainTilePresenter) bool {
 //       ret positionVec3;
 //     }
 // 
-func SetHighlighted(self &!TerrainTilePresenter, highlighted bool) {
+func SetHighlighted(self &TerrainTilePresenter, highlighted bool) {
   println("Setting location {self.location} to highlighted={highlighted})");
   set self.highlighted = highlighted;
-  self!.RefreshSurfaceColor();
+  self.RefreshSurfaceColor();
 }
-func SetSelected(self &!TerrainTilePresenter, selected bool) {
+func SetSelected(self &TerrainTilePresenter, selected bool) {
   println("Setting location {self.location} to selected={selected})");
   set self.selected = selected;
-  self!.RefreshSurfaceColor();
+  self.RefreshSurfaceColor();
 }
 
-func RefreshSurfaceColor(self &!TerrainTilePresenter) {
+func RefreshSurfaceColor(self &TerrainTilePresenter) {
   vassert(self.membersFrontColors.len() > 0, "No front color!");
-  self.domino!.SetSurfaceColor(
+  self.domino.SetSurfaceColor(
       self.tileViewId, 
       CalculateTintedFrontColor(
           self.membersFrontColors.get(self.membersFrontColors.len() - 1).1,
@@ -129,24 +129,24 @@ func RefreshSurfaceColor(self &!TerrainTilePresenter) {
           self.highlighted));
 }
 
-func RefreshSideColor(self &!TerrainTilePresenter) {
+func RefreshSideColor(self &TerrainTilePresenter) {
   vassert(self.membersSideColors.len() > 0, "No side color!");
-  self.domino!.SetCliffColor(
+  self.domino.SetCliffColor(
     self.tileViewId,
     self.membersSideColors.get(self.membersSideColors.len() - 1).1.clone());
 }
 
-func RefreshFeature(self &!TerrainTilePresenter) {
-  self.domino!.SetFeature(
+func RefreshFeature(self &TerrainTilePresenter) {
+  self.domino.SetFeature(
       self.tileViewId,
       if self.membersFeatures.len() == 0 { None<InitialSymbol>() }
       else { Some<InitialSymbol>(self.membersFeatures.get(self.membersFeatures.len() - 1).1.clone()) });
 }
 
 
-func RefreshUnit(self &!TerrainTilePresenter) {
+func RefreshUnit(self &TerrainTilePresenter) {
   if self.unitViewId != 0i64 {
-    self.domino!.DestroyUnit(self.unitViewId);
+    self.domino.DestroyUnit(self.unitViewId);
     set self.unitViewId = 0i64;
   }
   if self.unitViewId == 0i64 and self.membersUnitDominoFaces.len() > 0 {
@@ -174,67 +174,67 @@ func RefreshUnit(self &!TerrainTilePresenter) {
             self.membersUnitDetails.map(([a, b]) => { (a, b.clone()) }),
             1,
             1);
-    set self.unitViewId = self.domino!.CreateUnit(initialUnit);
+    set self.unitViewId = self.domino.CreateUnit(initialUnit);
   }
 }
 
-func RefreshDomino(self &!TerrainTilePresenter) {
+func RefreshDomino(self &TerrainTilePresenter) {
   // TODO: replace this with a call to unitView.SetDomino
-  self!.RefreshUnit();
+  self.RefreshUnit();
 }
 
-func RefreshUnitDominoShape(self &!TerrainTilePresenter) {
+func RefreshUnitDominoShape(self &TerrainTilePresenter) {
   // TODO: replace this with a call to unitView.SetSymbol
-  self!.RefreshUnit();
+  self.RefreshUnit();
 }
 
-func RefreshUnitDominoFace(self &!TerrainTilePresenter) {
+func RefreshUnitDominoFace(self &TerrainTilePresenter) {
   // TODO: replace this with a call to unitView.SetFace
-  self!.RefreshUnit();
+  self.RefreshUnit();
 }
 
-func RefreshUnitDetails(self &!TerrainTilePresenter) {
+func RefreshUnitDetails(self &TerrainTilePresenter) {
   // TODO: replace this with a call to unitView.SetDetails or something
-  self!.RefreshUnit();
+  self.RefreshUnit();
 }
 
-func RefreshOverlay(self &!TerrainTilePresenter) {
+func RefreshOverlay(self &TerrainTilePresenter) {
   println("RefreshOverlay len " + self.membersOverlays.len());
-  self.domino!.SetOverlay(
+  self.domino.SetOverlay(
     self.tileViewId,
     CalculateMaybeOverlay(&self.membersOverlays));
 }
 
-func RefreshItems(self &!TerrainTilePresenter) {
-  self.domino!.ClearItems(self.tileViewId);
+func RefreshItems(self &TerrainTilePresenter) {
+  self.domino.ClearItems(self.tileViewId);
   foreach [id, item] in self.membersItems {
-    self.domino!.AddItem(self.tileViewId, id, item.clone());
+    self.domino.AddItem(self.tileViewId, id, item.clone());
   }
 }
 
-func RefreshDetails(self &!TerrainTilePresenter) {
+func RefreshDetails(self &TerrainTilePresenter) {
   // unitView.ClearDetails();
   // foreach (var x in membersUnitDetails) {
   //   unitView.AddItem(x.Item1, x.Item2);
   // }
   // TODO put the above in
-  self!.RefreshUnit();
+  self.RefreshUnit();
 }
 
 
-func OnAddMember(self &!TerrainTilePresenter, member str) {
+func OnAddMember(self &TerrainTilePresenter, member str) {
   println("Adding member: " + member);
   memberId = set self.nextMemberId = self.nextMemberId + 1i64;
-  self.members!.add((memberId, member));
+  self.members.add((memberId, member));
   foreach thing in self.vivimap.getEntries(member) {
     maybe_top_color = thing.as<TopColorDescriptionForIDescription>();
     if maybe_top_color.is_ok() {
       top_color = &maybe_top_color.expect();
 
-      self.membersFrontColors!.add((memberId, top_color.color.clone()));
+      self.membersFrontColors.add((memberId, top_color.color.clone()));
       if self.initialized() {
         if (self.tileViewId != 0i64) {
-          self!.RefreshSurfaceColor();
+          self.RefreshSurfaceColor();
         }
       }
     }
@@ -242,10 +242,10 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_side_color = thing.as<SideColorDescriptionForIDescription>();
     if maybe_side_color.is_ok() {
       side_color = &maybe_side_color.expect();
-      self.membersSideColors!.add((memberId, side_color.color.clone()));
+      self.membersSideColors.add((memberId, side_color.color.clone()));
       if self.initialized() {
         if (self.tileViewId != 0i64) {
-          self!.RefreshSideColor();
+          self.RefreshSideColor();
         }
       }
     }
@@ -253,10 +253,10 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_overlay = thing.as<OverlayDescriptionForIDescription>();
     if maybe_overlay.is_ok() {
       overlay = &maybe_overlay.expect();
-      self.membersOverlays!.add((memberId, overlay.symbol.clone()));
+      self.membersOverlays.add((memberId, overlay.symbol.clone()));
       if self.initialized() {
         if (self.tileViewId != 0i64) {
-          self!.RefreshOverlay();
+          self.RefreshOverlay();
         }
       }
     }
@@ -264,10 +264,10 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_feature = thing.as<FeatureDescriptionForIDescription>();
     if maybe_feature.is_ok() {
       feature = &maybe_feature.expect();
-      self.membersFeatures!.add((memberId, feature.symbol.clone()));
+      self.membersFeatures.add((memberId, feature.symbol.clone()));
       if self.initialized() {
         if (self.tileViewId != 0i64) {
-          self!.RefreshFeature();
+          self.RefreshFeature();
         }
       }
     }
@@ -275,10 +275,10 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_item = thing.as<ItemDescriptionForIDescription>();
     if maybe_item.is_ok() {
       item = &maybe_item.expect();
-      self.membersItems!.add((memberId, item.symbol.clone()));
+      self.membersItems.add((memberId, item.symbol.clone()));
       if self.initialized() {
         if (self.tileViewId != 0i64) {
-          self!.RefreshItems();
+          self.RefreshItems();
         }
       }
     }
@@ -286,12 +286,12 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_domino_shape = thing.as<DominoShapeDescriptionForIDescription>();
     if maybe_domino_shape.is_ok() {
       domino_shape = &maybe_domino_shape.expect();
-      self.membersUnitDominoSymbols!.add((memberId, domino_shape.symbol.clone()));
+      self.membersUnitDominoSymbols.add((memberId, domino_shape.symbol.clone()));
       if self.initialized() {
         if (self.unitViewId == 0i64) {
-          self!.RefreshUnit();
+          self.RefreshUnit();
         } else {
-          self!.RefreshUnitDominoShape();
+          self.RefreshUnitDominoShape();
         }
       }
     }
@@ -299,12 +299,12 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_domino_face = thing.as<DominoFaceDescriptionForIDescription>();
     if maybe_domino_face.is_ok() {
       domino_face = &maybe_domino_face.expect();
-      self.membersUnitDominoFaces!.add((memberId, domino_face.symbol.clone()));
+      self.membersUnitDominoFaces.add((memberId, domino_face.symbol.clone()));
       if self.initialized() {
         if (self.unitViewId == 0i64) {
-          self!.RefreshUnit();
+          self.RefreshUnit();
         } else {
-          self!.RefreshUnitDominoFace();
+          self.RefreshUnitDominoFace();
         }
       }
     }
@@ -312,21 +312,21 @@ func OnAddMember(self &!TerrainTilePresenter, member str) {
     maybe_domino_detail = thing.as<DetailDescriptionForIDescription>();
     if maybe_domino_detail.is_ok() {
       domino_detail = &maybe_domino_detail.expect();
-      self.membersUnitDetails!.add((memberId, domino_detail.symbol.clone()));
+      self.membersUnitDetails.add((memberId, domino_detail.symbol.clone()));
       if self.initialized() {
         if (self.unitViewId == 0i64) {
-          self!.RefreshUnit();
+          self.RefreshUnit();
         } else {
-          self!.RefreshUnitDetails();
+          self.RefreshUnitDetails();
         }
       }
     }
   }
 }
 
-func OnRemoveMember(self &!TerrainTilePresenter, index int) {
+func OnRemoveMember(self &TerrainTilePresenter, index int) {
   println("Removing member at: " + index);
-  [memberId, member] = self.members!.remove(index);
+  [memberId, member] = self.members.remove(index);
 
   foreach thing in self.vivimap.getEntries(member) {
     maybe_top_color = thing.as<TopColorDescriptionForIDescription>();
@@ -334,10 +334,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       top_color = &maybe_top_color.expect();
 
       matching_member_index = self.membersFrontColors.indexWhere({_.0 == memberId}).get();
-      self.membersFrontColors!.remove(matching_member_index);
+      self.membersFrontColors.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshSurfaceColor();
+        self.RefreshSurfaceColor();
       }
     }
 
@@ -346,10 +346,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       side_color = &maybe_side_color.expect();
 
       matching_member_index = self.membersSideColors.indexWhere({_.0 == memberId}).get();
-      self.membersSideColors!.remove(matching_member_index);
+      self.membersSideColors.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshSideColor();
+        self.RefreshSideColor();
       }
     }
 
@@ -358,10 +358,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       overlay = &maybe_overlay.expect();
 
       matching_member_index = self.membersOverlays.indexWhere({_.0 == memberId}).get();
-      self.membersOverlays!.remove(matching_member_index);
+      self.membersOverlays.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshOverlay();
+        self.RefreshOverlay();
       }
     }
 
@@ -370,10 +370,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       feature = &maybe_feature.expect();
 
       matching_member_index = self.membersFeatures.indexWhere({_.0 == memberId}).get();
-      self.membersFeatures!.remove(matching_member_index);
+      self.membersFeatures.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshFeature();
+        self.RefreshFeature();
       }
     }
 
@@ -382,10 +382,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       item = &maybe_item.expect();
 
       matching_member_index = self.membersItems.indexWhere({_.0 == memberId}).get();
-      self.membersItems!.remove(matching_member_index);
+      self.membersItems.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshItems();
+        self.RefreshItems();
       }
     }
 
@@ -394,10 +394,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       unit_domino_symbol = &maybe_unit_domino_symbol.expect();
 
       matching_member_index = self.membersUnitDominoSymbols.indexWhere({_.0 == memberId}).get();
-      self.membersUnitDominoSymbols!.remove(matching_member_index);
+      self.membersUnitDominoSymbols.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshUnitDominoShape();
+        self.RefreshUnitDominoShape();
       }
     }
 
@@ -406,10 +406,10 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       unit_face = &maybe_unit_face.expect();
 
       matching_member_index = self.membersUnitDominoFaces.indexWhere({_.0 == memberId}).get();
-      self.membersUnitDominoFaces!.remove(matching_member_index);
+      self.membersUnitDominoFaces.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshUnitDominoFace();
+        self.RefreshUnitDominoFace();
       }
     }
 
@@ -418,24 +418,24 @@ func OnRemoveMember(self &!TerrainTilePresenter, index int) {
       unit_detail = &maybe_unit_detail.expect();
 
       matching_member_index = self.membersUnitDetails.indexWhere({_.0 == memberId}).get();
-      self.membersUnitDetails!.remove(matching_member_index);
+      self.membersUnitDetails.remove(matching_member_index);
 
       if self.tileViewId != 0i64 {
-        self!.RefreshUnitDetails();
+        self.RefreshUnitDetails();
       }
     }
   }
 }
 
-func AddMember(self &!TerrainTilePresenter, member str) {
-  self.terrainTile.members!.add(member);
-  self!.OnAddMember(member);
+func AddMember(self &TerrainTilePresenter, member str) {
+  self.terrainTile.members.add(member);
+  self.OnAddMember(member);
 }
 
-func RemoveMember(self &!TerrainTilePresenter, member str) {
+func RemoveMember(self &TerrainTilePresenter, member str) {
   index = self.terrainTile.members.indexOf(member).get();
-  self.terrainTile.members!.remove(index);
-  self!.OnRemoveMember(index);
+  self.terrainTile.members.remove(index);
+  self.OnRemoveMember(index);
 }
 // 
 //     public void RemoveMemberAt(int index) {
@@ -443,9 +443,9 @@ func RemoveMember(self &!TerrainTilePresenter, member str) {
 //       OnRemoveMember(index);
 //     }
 // 
-func SetElevation(self &!TerrainTilePresenter, elevation int) {
+func SetElevation(self &TerrainTilePresenter, elevation int) {
   set self.terrainTile.elevation = elevation;
-  self.domino!.SetElevation(self.tileViewId, elevation);
+  self.domino.SetElevation(self.tileViewId, elevation);
 }
 // 
 //     //   if (unitView) {

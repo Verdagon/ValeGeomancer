@@ -17,11 +17,11 @@ struct PhantomTilePresenter {
 //     Vec3 tileCenter;
   tileViewId! i64;
   highlighted bool;
-  domino &!GameToDominoConnection;
+  domino &GameToDominoConnection;
 }
 
 func PhantomTilePresenter(
-  domino &!GameToDominoConnection,
+  domino &GameToDominoConnection,
   pattern &Pattern,
   location Location,
   elevationStepHeight int)
@@ -45,14 +45,14 @@ PhantomTilePresenter {
   self =
       PhantomTilePresenter(pattern, location, elevationStepHeight, tileViewId, false, domino);
 
-  self!.ResetViews();
+  self.ResetViews();
 
   ret self;
 }
 
 func drop(self PhantomTilePresenter) {
   [pattern, _, elevationStepHeight, tileViewId, _, domino] = self;
-  domino!.DestroyTile(tileViewId);
+  domino.DestroyTile(tileViewId);
 }
 
 func GetColors(highlighted bool) (Vec4iAnimation, Vec4iAnimation) {
@@ -64,17 +64,17 @@ func GetColors(highlighted bool) (Vec4iAnimation, Vec4iAnimation) {
 }
 
 func SetHighlighted(
-  self &!PhantomTilePresenter,
+  self &PhantomTilePresenter,
   highlighted bool)
 {
   [frontColor, sideColor] = GetColors(highlighted);
-  self.domino!.SetSurfaceColor(self.tileViewId, frontColor);
-  //self.domino!.SetCliffColor(self.tileViewId, sideColor);
+  self.domino.SetSurfaceColor(self.tileViewId, frontColor);
+  //self.domino.SetCliffColor(self.tileViewId, sideColor);
   // tileView.SetDescription(GetTileDescription(pattern, location, highlighted));
 }
 
 func CreateTileView(
-  domino &!GameToDominoConnection,
+  domino &GameToDominoConnection,
   pattern &Pattern,
   location Location,
   elevationStepHeight int,
@@ -83,11 +83,11 @@ i64 {
   patternTileIndex = location.index_in_group;
   shapeIndex = pattern.pattern_tiles.get(patternTileIndex).shape_index;
   tileDescription = GetTileDescription(pattern, location, elevationStepHeight, highlighted);
-  ret domino!.CreateTile(tileDescription);
+  ret domino.CreateTile(tileDescription);
 }
 
-func ResetViews(self &!PhantomTilePresenter) {
-    self.domino!.DestroyTile(self.tileViewId);
+func ResetViews(self &PhantomTilePresenter) {
+    self.domino.DestroyTile(self.tileViewId);
     // tileView.DestroyTile();
 
   // position = CalculatePosition(elevationStepHeight, pattern, location);
